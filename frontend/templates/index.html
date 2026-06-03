@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DeepNIDS — Deep-Learning Intrusion Detection</title>
+  <meta name="description" content="Real-time deep-learning network intrusion detection — classroom demonstration." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>" />
+</head>
+<body>
+  <!-- ambient background layers -->
+  <div class="bg-aurora" aria-hidden="true"></div>
+  <div class="bg-grid" aria-hidden="true"></div>
+
+  <!-- ───────────────────────── top bar ───────────────────────── -->
+  <header class="topbar glass">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <h1>Deep<span>NIDS</span></h1>
+        <p>Neural Network Intrusion Detection</p>
+      </div>
+    </div>
+
+    <nav class="tabs" role="tablist" aria-label="Views">
+      <button class="tab is-active" data-tab="live" role="tab" aria-selected="true">
+        <span class="tab-dot"></span> Live Defense
+      </button>
+      <button class="tab" data-tab="train" role="tab" aria-selected="false">
+        <span class="tab-dot"></span> Training Playground
+      </button>
+      <button class="tab" data-tab="quality" role="tab" aria-selected="false">
+        <span class="tab-dot"></span> Quality &amp; Testing
+      </button>
+    </nav>
+
+    <div class="topbar-right">
+      <div class="model-toggle" id="model-toggle" role="group" aria-label="Detection model">
+        <button class="seg is-active" data-model="classifier" title="Supervised multi-class classifier">DNN Classifier</button>
+        <button class="seg" data-model="autoencoder" title="Unsupervised anomaly detection">Autoencoder</button>
+      </div>
+      <div class="status-pill" id="status-pill">
+        <span class="status-dot" id="conn-dot"></span>
+        <span id="conn-status">Connecting…</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="stage">
+    <!-- ═══════════════════ LIVE DEFENSE PANEL ═══════════════════ -->
+    <section id="panel-live" class="panel is-active" role="tabpanel">
+      <div class="bento">
+
+        <!-- HERO: live network flow visualizer -->
+        <article class="card card-hero" id="hero-card">
+          <div class="card-head">
+            <div>
+              <h2>Live Traffic Flow</h2>
+              <p class="muted">Packets stream through the deep-learning firewall in real time</p>
+            </div>
+            <div class="mode-chip" id="mode-chip">
+              <span class="mode-chip-dot"></span>
+              <span id="current-mode-label">Normal</span>
+            </div>
+          </div>
+          <div class="flow-wrap">
+            <canvas id="flow-canvas"></canvas>
+            <div class="threat-banner" id="threat-banner" hidden>
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <span id="threat-banner-text">Threat detected</span>
+            </div>
+          </div>
+        </article>
+
+        <!-- KPI rail -->
+        <article class="card kpi" id="kpi-packets-card">
+          <span class="kpi-label">Packets Analyzed</span>
+          <span class="kpi-value" id="kpi-packets">0</span>
+          <span class="kpi-sub" id="kpi-pps">0 pps</span>
+        </article>
+        <article class="card kpi" id="kpi-threats-card">
+          <span class="kpi-label">Threats Blocked</span>
+          <span class="kpi-value danger" id="kpi-threats">0</span>
+          <span class="kpi-sub" id="kpi-threat-rate">0% of traffic</span>
+        </article>
+        <article class="card kpi">
+          <span class="kpi-label">Inference Time</span>
+          <span class="kpi-value" id="kpi-latency">—</span>
+          <span class="kpi-sub">per packet</span>
+        </article>
+        <article class="card kpi">
+          <span class="kpi-label">Model Accuracy</span>
+          <span class="kpi-value accent" id="kpi-accuracy">—</span>
+          <span class="kpi-sub">validation set</span>
+        </article>
+
+        <!-- Attack launchpad -->
+        <article class="card card-launchpad">
+          <div class="card-head">
+            <div><h2>Attack Launchpad</h2><p class="muted">Inject live traffic profiles</p></div>
+          </div>
+          <div class="launchpad">
+            <button class="atk is-active" data-attack="Normal">
+              <span class="atk-icon">🌐</span>
+              <span class="atk-name">Normal Traffic</span>
+              <span class="atk-desc">Baseline browsing & DNS</span>
+            </button>
+            <button class="atk atk-ddos" data-attack="DDoS">
+              <span class="atk-icon">💥</span>
+              <span class="atk-name">Inject DDoS</span>
+              <span class="atk-desc">High-volume flood</span>
+            </button>
+            <button class="atk atk-scan" data-attack="PortScan">
+              <span class="atk-icon">📡</span>
+              <span class="atk-name">Port Scan</span>
+              <span class="atk-desc">Probe many hosts</span>
+            </button>
+            <button class="atk atk-brute" data-attack="BruteForce">
+              <span class="atk-icon">🔑</span>
+              <span class="atk-name">Brute Force</span>
+              <span class="atk-desc">Failed login storm</span>
+            </button>
+          </div>
+        </article>
+
+        <!-- Throughput chart -->
+        <article class="card card-throughput">
+          <div class="card-head">
+            <div><h2>Traffic Throughput</h2><p class="muted">Benign vs. flagged connections</p></div>
+            <div class="legend">
+              <span class="lg lg-safe">Benign</span>
+              <span class="lg lg-threat">Threat</span>
+            </div>
+          </div>
+          <canvas id="throughput-canvas"></canvas>
+        </article>
+
+        <!-- XAI panel -->
+        <article class="card card-xai">
+          <div class="card-head">
+            <div><h2>Explainable AI</h2><p class="muted">Feature attribution for the last verdict</p></div>
+          </div>
+          <div class="xai-verdict">
+            <div class="verdict-main">
+              <span class="verdict-label" id="pred-label">—</span>
+              <span class="verdict-conf" id="pred-confidence">confidence —</span>
+            </div>
+            <div class="prob-bars" id="prob-bars"></div>
+          </div>
+          <canvas id="xai-canvas"></canvas>
+        </article>
+
+        <!-- Alert log -->
+        <article class="card card-log">
+          <div class="card-head">
+            <div><h2>Security Event Log</h2><p class="muted">Most recent verdicts</p></div>
+          </div>
+          <ul class="alert-log" id="alert-log"></ul>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- ═══════════════════ TRAINING PANEL ═══════════════════ -->
+    <section id="panel-train" class="panel" role="tabpanel" hidden>
+      <div class="bento bento-train">
+
+        <article class="card card-train-controls">
+          <div class="card-head"><div><h2>Training Console</h2><p class="muted">Re-train the network from scratch, live</p></div></div>
+          <div class="control-row">
+            <label for="epochs-range">Epochs <strong id="epochs-val">50</strong></label>
+            <input type="range" id="epochs-range" min="20" max="120" value="50" step="5" />
+          </div>
+          <div class="control-row">
+            <label for="lr-select">Learning rate</label>
+            <select id="lr-select">
+              <option value="0.03">0.03 — fast</option>
+              <option value="0.01" selected>0.01 — balanced</option>
+              <option value="0.003">0.003 — careful</option>
+            </select>
+          </div>
+          <button class="btn-train" id="train-btn">
+            <span class="btn-train-shine"></span>
+            <span id="train-btn-label">▶ Train Model</span>
+          </button>
+          <div class="train-progress">
+            <div class="train-progress-fill" id="train-progress-fill"></div>
+          </div>
+          <p class="train-status" id="train-status">Idle — press “Train Model” to begin.</p>
+        </article>
+
+        <article class="card card-loss">
+          <div class="card-head">
+            <div><h2>Loss Curve</h2><p class="muted">Cross-entropy, lower is better</p></div>
+            <div class="legend"><span class="lg lg-train">Train</span><span class="lg lg-val">Validation</span></div>
+          </div>
+          <canvas id="loss-canvas"></canvas>
+        </article>
+
+        <article class="card card-acc">
+          <div class="card-head">
+            <div><h2>Accuracy &amp; Quality</h2><p class="muted">Validation set, per epoch</p></div>
+            <div class="legend"><span class="lg lg-acc">Accuracy</span><span class="lg lg-prec">Precision</span><span class="lg lg-rec">Recall</span></div>
+          </div>
+          <canvas id="acc-canvas"></canvas>
+        </article>
+
+        <article class="card kpi kpi-train"><span class="kpi-label">Final Accuracy</span><span class="kpi-value accent" id="m-accuracy">—</span></article>
+        <article class="card kpi kpi-train"><span class="kpi-label">Precision</span><span class="kpi-value" id="m-precision">—</span></article>
+        <article class="card kpi kpi-train"><span class="kpi-label">Recall</span><span class="kpi-value" id="m-recall">—</span></article>
+        <article class="card kpi kpi-train"><span class="kpi-label">Val Loss</span><span class="kpi-value" id="m-loss">—</span></article>
+
+        <article class="card card-train-log">
+          <div class="card-head"><div><h2>Epoch Stream</h2><p class="muted">Live training telemetry</p></div></div>
+          <ul class="train-log" id="train-log"></ul>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- ═══════════════════ QUALITY & TESTING PANEL ═══════════════════ -->
+    <section id="panel-quality" class="panel" role="tabpanel" hidden>
+      <div class="bento bento-quality">
+
+        <!-- Quality gates strip -->
+        <article class="card card-gates">
+          <div class="card-head">
+            <div><h2>Quality Gates</h2><p class="muted">ISO/IEC 25010 quality characteristics · pass/fail thresholds</p></div>
+            <button class="btn-ghost" id="run-all-btn">⚡ Run All Checks</button>
+          </div>
+          <div class="gates" id="quality-gates">
+            <div class="gate" data-gate="tests"><span class="gate-state">○</span><span class="gate-name">All Tests Pass</span><span class="gate-detail">not run</span></div>
+            <div class="gate" data-gate="coverage"><span class="gate-state">○</span><span class="gate-name">Coverage ≥ 75%</span><span class="gate-detail">not run</span></div>
+            <div class="gate" data-gate="accuracy"><span class="gate-state">○</span><span class="gate-name">Model F1 ≥ 0.90</span><span class="gate-detail">not run</span></div>
+            <div class="gate" data-gate="latency"><span class="gate-state">○</span><span class="gate-name">p95 Latency &lt; 5 ms</span><span class="gate-detail">not run</span></div>
+          </div>
+        </article>
+
+        <!-- Automated test suite -->
+        <article class="card card-tests">
+          <div class="card-head">
+            <div><h2>Automated Test Suite</h2><p class="muted">Unit · integration · system — pytest</p></div>
+            <button class="btn-run" id="run-tests-btn"><span id="run-tests-label">▶ Run Test Suite</span></button>
+          </div>
+          <div class="test-summary" id="test-summary">
+            <div class="ts-num" id="ts-passed">—</div><div class="ts-lbl">passed</div>
+            <div class="ts-num danger" id="ts-failed">—</div><div class="ts-lbl">failed</div>
+            <div class="ts-num" id="ts-total">—</div><div class="ts-lbl">total</div>
+            <div class="ts-num accent" id="ts-time">—</div><div class="ts-lbl">seconds</div>
+          </div>
+          <ul class="test-list" id="test-list"><li class="test-empty">Press “Run Test Suite” to execute pytest with coverage.</li></ul>
+        </article>
+
+        <!-- Coverage -->
+        <article class="card card-coverage">
+          <div class="card-head"><div><h2>Code Coverage</h2><p class="muted">Branch coverage</p></div></div>
+          <div class="cov-ring" id="cov-ring" style="--pct:0">
+            <div class="cov-ring-inner"><span id="cov-total">—</span></div>
+          </div>
+          <div class="cov-files" id="cov-files"></div>
+        </article>
+
+        <!-- Confusion matrix -->
+        <article class="card card-confusion">
+          <div class="card-head">
+            <div><h2>Confusion Matrix</h2><p class="muted">Model verdicts on held-out traffic</p></div>
+            <button class="btn-run" id="eval-btn"><span id="eval-label">▶ Evaluate</span></button>
+          </div>
+          <canvas id="confusion-canvas"></canvas>
+        </article>
+
+        <!-- Per-class metrics -->
+        <article class="card card-classmetrics">
+          <div class="card-head"><div><h2>Per-Class Quality Metrics</h2><p class="muted">Precision · Recall · F1 per attack class</p></div></div>
+          <table class="metrics-table">
+            <thead><tr><th>Class</th><th>Precision</th><th>Recall</th><th>F1</th><th>Support</th></tr></thead>
+            <tbody id="classmetrics"><tr><td colspan="5" class="test-empty">Run an evaluation to populate.</td></tr></tbody>
+          </table>
+        </article>
+
+        <!-- Performance -->
+        <article class="card card-perf">
+          <div class="card-head">
+            <div><h2>Performance Benchmark</h2><p class="muted">Inference latency &amp; throughput</p></div>
+            <button class="btn-run" id="bench-btn"><span id="bench-label">▶ Benchmark</span></button>
+          </div>
+          <div class="perf-grid" id="perf-grid">
+            <div class="perf-cell"><span class="perf-val" id="perf-p50">—</span><span class="perf-lbl">p50 latency</span></div>
+            <div class="perf-cell"><span class="perf-val" id="perf-p95">—</span><span class="perf-lbl">p95 latency</span></div>
+            <div class="perf-cell"><span class="perf-val" id="perf-p99">—</span><span class="perf-lbl">p99 latency</span></div>
+            <div class="perf-cell"><span class="perf-val accent" id="perf-tput">—</span><span class="perf-lbl">throughput</span></div>
+          </div>
+        </article>
+
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/js/charts.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+markers = [
+    "unit: component-level white/black-box tests",
+    "integration: pipeline-level tests across components",
+    "system: end-to-end API / WebSocket tests",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["backend", "main"]
+omit = ["tests/*", ".venv/*"]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
