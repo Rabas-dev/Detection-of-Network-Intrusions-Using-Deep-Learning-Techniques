@@ -1,34 +1,27 @@
 # 🛡️ DeepNIDS — Deep-Learning Network Intrusion Detection
 
-An interactive, classroom-ready demonstration of **detecting network intrusions
-with deep learning**. A single FastAPI process hosts the PyTorch inference
-pipeline *and* serves a premium, real-time dashboard — no Node, no npm, no
-external datasets, no internet required.
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
 
-![stack](https://img.shields.io/badge/stack-FastAPI%20%2B%20PyTorch%20%2B%20Vanilla%20JS-38bdf8)
+An interactive, classroom-ready demonstration of detecting network intrusions with deep learning. A single FastAPI process hosts the PyTorch inference pipeline and serves a real-time dashboard — no Node, no npm, no external datasets, no internet required.
 
----
+Independent project built as a software-quality-engineering case study.
 
 ## ✨ What it shows
 
-- **Two deep-learning paradigms**, toggleable live:
-  - **DNN Classifier** — supervised multi-class (Normal / DDoS / PortScan / BruteForce)
-    with BatchNorm + Dropout.
-  - **Autoencoder** — unsupervised anomaly detection; reconstruction error → anomaly score.
-- **Live traffic visualizer** — packets stream through a "deep-learning firewall"
-  gate, passing green or bursting red when blocked.
-- **Attack Launchpad** — inject DDoS, Port Scan, or Brute Force traffic on demand.
-- **Explainable AI** — per-packet, gradient-based feature attribution shows
-  *why* the model flagged a flow (e.g. failed logins → Brute Force).
-- **Training Playground** — retrain the network from scratch and watch the loss
-  curve fall and accuracy climb, epoch by epoch, over a WebSocket.
+Two deep-learning paradigms, toggleable live:
 
-The traffic is synthesized from NSL-KDD–inspired statistical profiles, so the
-demo is fully self-contained and runs offline in seconds.
+- **DNN Classifier** — supervised multi-class (Normal / DDoS / PortScan / BruteForce) with BatchNorm + Dropout
+- **Autoencoder** — unsupervised anomaly detection; reconstruction error → anomaly score
+- **Live traffic visualizer** — packets stream through a "deep-learning firewall" gate, passing green or bursting red when blocked
+- **Attack Launchpad** — inject DDoS, Port Scan, or Brute Force traffic on demand
+- **Explainable AI** — per-packet, gradient-based feature attribution shows *why* the model flagged a flow (e.g. failed logins → Brute Force)
+- **Training Playground** — retrain the network from scratch and watch the loss curve fall and accuracy climb, epoch by epoch, over a WebSocket
 
----
+Traffic is synthesized from NSL-KDD–inspired statistical profiles, so the demo is fully self-contained and runs offline in seconds.
 
-## 🚀 Quick start
+## 🚀 Quick Start
 
 ```bash
 # 1. (optional) create a virtual environment
@@ -41,43 +34,31 @@ pip install -r requirements.txt
 python main.py
 ```
 
-Then open **http://localhost:8000**.
+Then open [http://localhost:8000](http://localhost:8000). First launch warms up both models in a couple of seconds; the status pill turns green ("Live") once the traffic feed connects.
 
-> First launch warms up both models in a couple of seconds; the status pill turns
-> green ("Live") once the traffic feed connects.
+## 🧪 Quality Engineering
 
----
-
-## 🧪 Quality engineering (for the SQE course)
-
-This project doubles as a Software-Quality-Engineering case study.
+This project doubles as a software-quality-engineering case study, not just a machine-learning demo:
 
 ```bash
 pip install -r requirements-dev.txt
 pytest tests -q --cov=backend --cov=main --cov-report=term-missing
 ```
 
-- **Layered test suite** — `tests/test_unit.py`, `test_integration.py`,
-  `test_system.py` using **Boundary Value Analysis**, **Equivalence Partitioning**,
-  and **decision-table** techniques.
-- **Branch coverage** via `pytest-cov` (quality gate ≥ 75 %).
-- **CI pipeline** — `.github/workflows/ci.yml` runs tests + coverage on every push.
-- **In-app Quality Dashboard** — the **Quality & Testing** tab runs the test
-  suite live, shows coverage, the model **confusion matrix**, per-class
-  precision/recall/F1, latency percentiles, and ISO/IEC 25010 quality gates.
-- **Docs** — [`docs/TEST_PLAN.md`](docs/TEST_PLAN.md) and
-  [`docs/RTM.md`](docs/RTM.md) (Requirements Traceability Matrix).
+- **Layered test suite** — `tests/test_unit.py`, `test_integration.py`, `test_system.py`, using Boundary Value Analysis, Equivalence Partitioning, and decision-table techniques
+- **Branch coverage** via `pytest-cov` (quality gate ≥ 75%)
+- **CI pipeline** — `.github/workflows/ci.yml` runs tests + coverage on every push
+- **In-app Quality Dashboard** — the Quality & Testing tab runs the test suite live and shows coverage, the model confusion matrix, per-class precision/recall/F1, latency percentiles, and ISO/IEC 25010 quality gates
+- **Docs** — `docs/TEST_PLAN.md` and `docs/RTM.md` (Requirements Traceability Matrix)
 
 | Quality gate | Threshold |
-| --- | --- |
+|---|---|
 | All tests pass | 0 failures |
-| Branch coverage | ≥ 75 % |
+| Branch coverage | ≥ 75% |
 | Model macro-F1 | ≥ 0.90 |
 | Inference p95 latency | < 5 ms |
 
----
-
-## 🗂️ Project layout
+## 🗂️ Project Layout
 
 ```
 main.py                     FastAPI app: WebSockets + static serving + REST
@@ -89,31 +70,30 @@ backend/
 frontend/
   templates/index.html      Dashboard markup
   static/css/style.css      Glassmorphism design system
-  static/js/charts.js        Bespoke canvas charts (zero dependencies)
-  static/js/app.js           WebSocket controller + flow visualizer
+  static/js/charts.js       Bespoke canvas charts (zero dependencies)
+  static/js/app.js          WebSocket controller + flow visualizer
 tests/test_smoke.py         Backend smoke tests
 ```
 
-## 🔌 API surface
+## 🔌 API Surface
 
-| Route             | Type      | Purpose                                        |
-| ----------------- | --------- | ---------------------------------------------- |
-| `GET /`           | HTML      | Dashboard                                      |
-| `GET /metrics`    | JSON      | Baseline metrics + feature/class metadata      |
-| `POST /attack`    | JSON      | Switch live traffic profile `{ "mode": ... }`  |
-| `POST /train/start` | JSON    | Hint to stream training over the socket        |
-| `WS /ws/traffic`  | WebSocket | Live classification + XAI (~6 packets/sec)     |
-| `WS /ws/train`    | WebSocket | Live per-epoch training metrics                |
+| Route | Type | Purpose |
+|---|---|---|
+| `GET /` | HTML | Dashboard |
+| `GET /metrics` | JSON | Baseline metrics + feature/class metadata |
+| `POST /attack` | JSON | Switch live traffic profile `{ "mode": ... }` |
+| `POST /train/start` | JSON | Hint to stream training over the socket |
+| `WS /ws/traffic` | WebSocket | Live classification + XAI (~6 packets/sec) |
+| `WS /ws/train` | WebSocket | Live per-epoch training metrics |
+
+## 🎓 Suggested Demo Flow
+
+1. **Baseline** — open the dashboard; calm green flow, low metrics
+2. **Train** — open Training Playground, press Train Model, watch loss fall
+3. **DDoS** — press Inject DDoS; the firewall flares red, throughput spikes, threats counter climbs
+4. **Port Scan / Brute Force** — note how the Explainable AI bars shift to the features that define each attack (e.g. Failed Logins for brute force)
+5. **Toggle model** — switch to the Autoencoder to contrast supervised classification with unsupervised anomaly detection
 
 ---
 
-## 🎓 Suggested demo flow
-
-1. **Baseline** — open the dashboard; calm green flow, low metrics.
-2. **Train** — open *Training Playground*, press **Train Model**, watch loss fall.
-3. **DDoS** — press **Inject DDoS**; the firewall flares red, throughput spikes,
-   threats counter climbs.
-4. **Port Scan / Brute Force** — note how the **Explainable AI** bars shift to the
-   features that define each attack (e.g. *Failed Logins* for brute force).
-5. **Toggle model** — switch to the **Autoencoder** to contrast supervised
-   classification with unsupervised anomaly detection.
+Built by **[Rabas Ahmed](https://github.com/Rabas-dev)**
